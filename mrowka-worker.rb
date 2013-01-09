@@ -42,13 +42,30 @@ class MrowkaWorkerInterface
 	end
 	
 	# Generates a full summary including the core part.
-	def summary core
-		[
-			"robot pracowicie",
-			core,
-			(task.desc && !task.desc.strip.empty?) ? "(#{task.desc})" : nil,
-			"[operator: [[User:#{task.user}|#{task.user}]]]"
-		].compact.join(" ")
+	# 
+	# Tries hard to get it to fit in 255 bytes.
+	def summary *bases
+		# define variants of summary parts, in decreasing length
+		summ = [
+			["robot pracowicie", "robot"],
+			bases.sort_by{|a| -a.bytes.to_a.length },
+			[(task.desc && !task.desc.strip.empty?) ? "(#{task.desc})" : nil],
+			["[operator: [[User:#{task.user}|#{task.user}]]]", "[operator: #{task.user}]", "[#{task.user}]"]
+		]
+		
+		# how important it is to keep parts at given indices intact
+		priorities = [1, 5, 10, 3]
+		inv = priorities.max + 1
+		
+		# compute all possible summaries and rank them by sum of length of parts, weighted by priorities
+		possib = summ[0].product(*summ[1..-1])
+		possib = possib.sort_by{|summ|
+			- summ.zip(priorities).map{|part, prio| part.bytes.to_a.length * (inv - prio) }.inject(:+)
+		}
+		
+		# take the first one that fits within 255 bytes, or last
+		summ = possib.find{|summ| summ.compact.join(" ").bytes.to_a.length <= 255 } || possib.last
+		return summ.compact.join(" ")
 	end
 end
 

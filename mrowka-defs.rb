@@ -43,8 +43,14 @@ Mrowka = {
 				to = s.cleanup_title to
 				to.sub!(/^#{s.ns_regex_for 'category'}:/, '')
 				
-				
-				s.summary = interface.summary "#{fullmove ? "przenosi kategorię" : "zmienia kategorię"}: [[:Category:#{from}|#{from}]] → [[:Category:#{to}|#{to}]]"
+				# interface.summary will choose the longest possible message fitting 255 bytes of summary
+				summ_intro = fullmove ? "przenosi kategorię" : "zmienia kategorię"
+				s.summary = interface.summary(
+					"#{summ_intro}: [[:Category:#{from}|#{from}]] → [[:Category:#{to}|#{to}]]",
+					"#{summ_intro}: #{from} → #{to}",
+					"#{summ_intro} [[#{to}]]",
+					"#{summ_intro} #{to}"
+				)
 				
 				if fullmove
 					# move the category itself first
