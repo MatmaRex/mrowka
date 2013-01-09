@@ -51,7 +51,7 @@ module MrowkaWeb
 					task = MrowkaTask.new type, @request[:desc], args, status, Time.now, nil, @request[:user], "hash placeholder", nil
 					task.hash = Digest::MD5.hexdigest(task.inspect)
 					
-					data.push task
+					data.push task unless data.find{|d| d.hash == task.hash }
 					data
 				end
 				
