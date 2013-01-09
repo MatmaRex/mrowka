@@ -18,6 +18,40 @@ print "Pass? "
 s = Sunflower.new('w:pl').login('MatmaBot', STDIN.noecho{gets.strip})
 puts ''
 
+# A class for worker<->task interfacing.
+class MrowkaWorkerInterface
+	attr_accessor :task
+	
+	def initialize task
+		@task = task
+	end
+	
+	# Increments the progress.
+	def increment
+		@prog ||= 0
+		@prog += 1
+		
+		@task.status.change_done = @prog
+		
+		if @prog % 10 == 0 or @prog == @task.status.change_total
+			$db.transact do |data|
+				data[0].status.change_done = @prog
+				data
+			end
+		end
+	end
+	
+	# Generates a full summary including the core part.
+	def summary core
+		[
+			"robot pracowicie",
+			core,
+			(task.desc && !task.desc.strip.empty?) ? "(#{task.desc})" : nil,
+			"[operator: [[User:#{task.user}|#{task.user}]]]"
+		].compact.join(" ")
+	end
+end
+
 while true
 	File.write 'keepalive', Time.now.to_i.to_s
 	task = $db.read.last
@@ -57,36 +91,14 @@ while true
 		end
 		
 	when :inprogress
-		# create a simple object for managing the progress of the task
-		progressor = {}
-		progressor.send :instance_variable_set, :@task, task
-		def progressor.increment
-			@prog ||= 0
-			@prog += 1
-			
-			@task.status.change_done = @prog
-			
-			if @prog % 10 == 0 or @prog == @task.status.change_total
-				$db.transact do |data|
-					data[0].status.change_done = @prog
-					data
-				end
-			end
-		end
+		interface = MrowkaWorkerInterface.new task
 		
 		begin
-			s.summary = [
-				"robot pracowicie",
-				"#{Mrowka[:tasks][task.type][:summary].call task.args}",
-				"(#{task.desc && !task.desc.strip.empty? ? task.desc : "brak opisu"})",
-				"[operator: [[User:#{task.user}|#{task.user}]]]"
-			].join(" ")
-			Mrowka[:tasks][task.type][:process].call s, s.make_list(:pages, task.list), progressor, task.args
+			Mrowka[:tasks][task.type][:process].call s, s.make_list(:pages, task.list), interface, task.args
 			okay = true
 		rescue => e
 			okay = false
 		end
-		
 		s.summary = nil
 		
 		if okay
