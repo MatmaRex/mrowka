@@ -58,6 +58,13 @@ while true
 	sleep 5
 	next if !task
 	
+	# if more than 100 edits made in last 24 hours, stop.
+	if ($db.read + $dbarchive.read).select{|task| !task.finished || Time.now-task.finished < 24*60*60 }.map{|task| task.status.change_done }.compact.inject(0, :+) >= 100
+		puts "Daily limit exceeded. Sleeping for 30 minutes..."
+		sleep 60*30
+		next
+	end
+	
 	print "Task #{task.hash}: #{task.status.state}... "
 	
 	case task.status.state
