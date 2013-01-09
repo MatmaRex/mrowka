@@ -19,6 +19,52 @@ Mrowka = {
 				page.save
 				interface.increment
 			},
-		}
+		},
+		# Przeniesienie / masowa zmiana kategorii.
+		category_move: {
+			attrs: {
+				from: [:_input, "Nazwa kategorii, której zawartość chcesz przenieść (bez prefiksu Kategoria:)"],
+				to: [:_input, "Nazwa kategorii docelowej (bez prefiksu Kategoria:)"],
+				fullmove: [:_checkbox, "Pełne przeniesienie – skopiuj stronę kategorii pod nową nazwę i oznacz starą {{ek}}"],
+			},
+			make_list: lambda{|s, (from, to, fullmove)|
+				from = s.cleanup_title from
+				from = 'Category:'+from unless from.index(s.ns_regex_for 'category') == 0
+				
+				s.make_list :category, from
+			},
+			process: lambda{|s, list, interface, (from, to, fullmove)|
+				# data comes straight from the form...
+				fullmove = (fullmove=='on')
+				
+				from = s.cleanup_title from
+				from.sub!(/^#{s.ns_regex_for 'category'}:/, '')
+				
+				to = s.cleanup_title to
+				to.sub!(/^#{s.ns_regex_for 'category'}:/, '')
+				
+				
+				s.summary = interface.summary "#{fullmove ? "przenosi kategorię" : "zmienia kategorię"}: [[:Category:#{from}|#{from}]] → [[:Category:#{to}|#{to}]]"
+				
+				if fullmove
+					# move the category itself first
+					f = s.page 'Category:'+from
+					t = s.page 'Category:'+to
+
+					t.text = f.text
+					t.save
+
+					f.prepend "{{ek|#{s.summary}}}"
+					f.save
+				end
+				
+				# move the articles
+				list.pages_preloaded.each do |p|
+					p.change_category from, to
+					p.save
+					interface.increment
+				end
+			},
+		},
 	}
 }
