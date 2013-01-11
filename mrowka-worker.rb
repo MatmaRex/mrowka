@@ -60,7 +60,7 @@ class MrowkaWorkerInterface
 		# compute all possible summaries and rank them by sum of length of parts, weighted by priorities
 		possib = summ[0].product(*summ[1..-1])
 		possib = possib.sort_by{|summ|
-			- summ.zip(priorities).map{|part, prio| part.bytes.to_a.length * (inv - prio) }.inject(:+)
+			- summ.zip(priorities).map{|part, prio| part ? part.bytes.to_a.length * (inv - prio) : 0 }.inject(:+)
 		}
 		
 		# take the first one that fits within 255 bytes, or last
