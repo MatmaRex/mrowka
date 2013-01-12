@@ -35,8 +35,8 @@ DB.create_table? :tasks do
 	# Current status of this task. TODO merge.
 	int :status_id
 	# Times this task has been created, and time it has been last touched.
-	time :started
-	time :touched
+	datetime :started
+	datetime :touched
 	# User who requested this task to be done.
 	text :user
 	# MD5 hash of all of the above, computed on task creation.
