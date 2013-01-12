@@ -1,5 +1,6 @@
 # coding: utf-8
 
+require_relative 'mrowka-config'
 require_relative 'mrowka-defs'
 
 require 'io/console'
@@ -75,8 +76,8 @@ while true
 	sleep 5
 	next if !task
 	
-	# if more than 1000 edits made in last 24 hours, stop.
-	if ($db.read + $dbarchive.read).select{|task| !task.finished || Time.now-task.finished < 24*60*60 }.map{|task| task.status.change_done }.compact.inject(0, :+) >= 1000
+	# if too many edits made in last 24 hours, stop.
+	if ($db.read + $dbarchive.read).select{|task| !task.finished || Time.now-task.finished < 24*60*60 }.map{|task| task.status.change_done }.compact.inject(0, :+) >= MrowkaConfig['worker']['dailylimit'].to_i
 		puts "Daily limit exceeded. Sleeping for 30 minutes..."
 		sleep 60*30
 		next
