@@ -5,14 +5,8 @@ require_relative 'mrowka-defs'
 require 'camping'
 
 require_relative 'filebackend'
-require_relative 'mrowka-task'
+require_relative 'mrowka-models'
 require_relative 'mab-forms'
-
-$db = FileBackend.new 'data-marshal', 'data-marshal.lock'
-$dbarchive = FileBackend.new 'dataarchive-marshal', 'dataarchive-marshal.lock'
-
-$db.write([]) if !$db.exist?
-$dbarchive.write([]) if !$dbarchive.exist?
 
 Camping.goes :MrowkaWeb
 module MrowkaWeb
@@ -25,7 +19,7 @@ module MrowkaWeb
 		
 		class Tasks
 			def get
-				@tasks = $db.read + $dbarchive.read
+				@tasks = MrowkaTask.all
 				render :tasks
 			end
 		end
@@ -42,17 +36,23 @@ module MrowkaWeb
 				render :new_task_form
 			end
 			def post type
-				type = type.to_sym
-				
-				$db.transact do |data|
-					status = MrowkaStatus.new :waiting, nil, 0
+				DB.transaction do
 					args = Mrowka[:tasks][type.to_sym][:attrs].map{|key, val| @request["taskarg_#{key}"] }
 					
-					task = MrowkaTask.new type, @request[:desc], args, status, Time.now, nil, @request[:user], "hash placeholder", nil
-					task.hash = Digest::MD5.hexdigest(task.inspect)
+					task = MrowkaTask.new(
+						type: type,
+						desc: @request[:desc],
+						args: args,
+						started: Time.now,
+						touched: Time.now,
+						user: @request[:user],
+						md5: nil # placeholder!
+					)
+					task.save # TODO dafuq? why is this necessary?
 					
-					data.push task unless data.find{|d| d.hash == task.hash }
-					data
+					task.status = MrowkaStatus.new(state: 'waiting')
+					task.md5 = Digest::MD5.hexdigest(task.inspect)
+					task.save
 				end
 				
 				redirect Tasks
@@ -111,23 +111,24 @@ module MrowkaWeb
 					th "Hash"
 				end
 				@tasks.each do |task|
+					puts task.inspect
 					tr do
-						td readable_type_map[task.type]
+						td readable_type_map[task.type.to_sym]
 						td task.desc
 						td do
 							dl do
-								Mrowka[:tasks][task.type][:attrs].keys.zip(task.args) do |key, val|
+								Mrowka[:tasks][task.type.to_sym][:attrs].keys.zip(task.args) do |key, val|
 									dt key
 									dd val
 								end
 							end
 						end
 						td "#{task.started.to_s} przez #{task.user}"
-						td "#{readable_status_map[task.status.state]} #{task.status.state == :error ? task.status.error_message : nil} (#{task.status.change_done}/#{task.status.change_total || '?'})"
+						td "#{readable_status_map[task.status.state.to_sym]} #{task.status.state == 'error' ? task.status.error_message : nil} (#{task.status.change_done}/#{task.status.change_total || '?'})"
 						td {
-							text task.hash
+							text task.md5
 							text ' '
-							_confirm_form task if task.status.state == :waiting
+							_confirm_form task if task.status.state == 'waiting'
 						}
 					end
 				end
@@ -140,8 +141,8 @@ module MrowkaWeb
 			form style:'display:inline', method:"POST", action:"https://pl.wikipedia.org/w/index.php" do
 				_field.call 'title', "Wikipedysta:#{task.user}/mrówka.js"
 				_field.call 'action', 'edit'
-				_field.call 'wpSummary', "potwierdzenie zgłoszenia #{task.hash}"
-				_field.call 'wpTextbox1', task.hash.to_s
+				_field.call 'wpSummary', "potwierdzenie zgłoszenia #{task.md5}"
+				_field.call 'wpTextbox1', task.md5.to_s
 				
 				input type:'submit', value:'potwierdź'
 			end
@@ -170,7 +171,7 @@ module MrowkaWeb
 			h3 @type
 			
 			form method:'POST' do
-				Mrowka[:tasks][@type][:attrs].each_pair do |key, (mode, desc)|
+				Mrowka[:tasks][@type.to_sym][:attrs].each_pair do |key, (mode, desc)|
 					send mode, desc, "taskarg_#{key}"
 					br
 				end
