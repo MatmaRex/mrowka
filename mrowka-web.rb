@@ -175,9 +175,9 @@ module MrowkaWeb
 					br
 				end
 				br; br
-				_input "Zgłaszający", :user; text " (będziesz musiał potwierdzić zgłoszenie na swojej stronie użytkownika)"
+				_input "Zgłaszający", :user; text " (będziesz musiał potwierdzić zgłoszenie na swojej podstronie użytkownika)"
 				br
-				_input "Dodatkowy opis zmian", :desc
+				_input "Dodatkowy opis zmian (zostanie zawarty w opisie edycji bota)", :desc
 				br
 				input type:'submit', value:"Do pracy!"
 			end
