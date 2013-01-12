@@ -4,7 +4,6 @@ require_relative 'mrowka-defs'
 
 require 'camping'
 
-require_relative 'filebackend'
 require_relative 'mrowka-models'
 require_relative 'mab-forms'
 

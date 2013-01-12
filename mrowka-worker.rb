@@ -6,7 +6,6 @@ require_relative 'mrowka-defs'
 require 'io/console'
 require 'sunflower'
 
-require_relative 'filebackend'
 require_relative 'mrowka-models'
 
 print "Pass? "
