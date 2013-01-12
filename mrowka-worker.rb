@@ -9,7 +9,7 @@ require 'sunflower'
 require_relative 'mrowka-models'
 
 print "Pass? "
-s = Sunflower.new('w:pl').login('MatmaBot', STDIN.noecho{gets.strip})
+s = Sunflower.new(MrowkaConfig['worker']['botwiki']).login(MrowkaConfig['worker']['botusername'], STDIN.noecho{gets.strip})
 puts ''
 
 # A class for worker<->task interfacing.
