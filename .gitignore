@@ -1,6 +1,3 @@
-data-marshal
-data-marshal.lock
-dataarchive-marshal
-dataarchive-marshal.lock
+database.sqlite
 keepalive
 config.ini
