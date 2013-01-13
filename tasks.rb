@@ -1,7 +1,7 @@
 # coding: utf-8
 
-Mrowka = {
-	tasks: {
+module Mrowka
+	Tasks = {
 		# Zadanie testowe - zamiana zawartości strony.
 		test: {
 			attrs: {
@@ -73,4 +73,4 @@ Mrowka = {
 			},
 		},
 	}
-}
+end
