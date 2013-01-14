@@ -47,6 +47,25 @@ module Mrowka
 		binary :list
 	end
 
+	DB.create_table? :lists do
+		primary_key :id
+		
+		# Type of this list.
+		text :type
+		# Additional description. May not be empty.
+		text :desc
+		# Arguments given by user. Stored serialized for convenience.
+		binary :args
+		# Time this list has been defined.
+		datetime :created
+		# Time the contents have been last regenerated.
+		datetime :updated, null: true
+		# User who requested this list to be created.
+		text :user
+		# The actual list contents, as of the above. Stored serialized for convenience.
+		binary :contents
+	end
+
 	module Models
 		# Represents current progress of a task.
 		class Status < Sequel::Model
@@ -59,6 +78,12 @@ module Mrowka
 			plugin :serialization, :marshal, :list
 			
 			one_to_one :status
+		end
+
+		class List < Sequel::Model
+			plugin :schema
+			plugin :serialization, :marshal, :args
+			plugin :serialization, :marshal, :contents
 		end
 	end
 end

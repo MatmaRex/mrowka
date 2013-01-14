@@ -78,13 +78,22 @@ module Mrowka
 				
 				case task.status.state
 				when 'waiting'
-					resp = s.API("action=query&list=users&format=json&usprop=groups&ususers=#{CGI.escape task.user}")
-					
-					if ( ( resp['query']['users'].first || {} )['groups'] || [] ).include? 'sysop'
-						page = s.page "User:#{task.user}/mrówka.js"
-						if page.text.strip == task.md5.to_s
-							task.status.state = 'queued'
+					if Mrowka::Tasks[task.type.to_sym][:edits] == false
+						okay = true
+					else
+						resp = s.API("action=query&list=users&format=json&usprop=groups&ususers=#{CGI.escape task.user}")
+						sysop = ( ( resp['query']['users'].first || {} )['groups'] || [] ).include? 'sysop'
+						
+						if sysop
+							page = s.page "User:#{task.user}/mrówka.js"
+							if page.text.strip == task.md5.to_s
+								okay = true
+							end
 						end
+					end
+					
+					if okay
+						task.status.state = 'queued'
 					else
 						task.status.state = 'error'
 						task.status.error_message = "<user not a sysop>"
@@ -92,7 +101,11 @@ module Mrowka
 					
 				when 'queued'
 					begin
-						list = Mrowka::Tasks[task.type.to_sym][:make_list].call s, task.args
+						if Mrowka::Tasks[task.type.to_sym][:make_list]
+							list = Mrowka::Tasks[task.type.to_sym][:make_list].call s, task.args
+						else
+							list = []
+						end
 					rescue => e
 						list = nil
 					end

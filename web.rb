@@ -1,8 +1,12 @@
 # coding: utf-8
 
 require 'camping'
+# TODO fix Sunflower so this is not necessary
+class Sunflower; end
+require 'sunflower/list'
 
 require_relative 'tasks'
+require_relative 'lists'
 require_relative 'models'
 require_relative 'mab-forms'
 
@@ -70,10 +74,55 @@ module Mrowka
 					redirect Tasks
 				end
 			end
+			
+			class Lists
+				def get
+					@lists = Mrowka::Models::List.all
+					render :lists
+				end
+			end
+			
+			class ListN
+				def get n
+					@list = Mrowka::Models::List.find id: n.to_i
+					render :list
+				end
+			end
+			
+			class ListsNew
+				def get
+					render :new_list_list
+				end
+			end
+			
+			class ListsNewX
+				def get type
+					@type = type.to_sym
+					render :new_list_form
+				end
+				def post type
+					DB.transaction do
+						args = Mrowka::Lists[type.to_sym][:attrs].map{|key, val| @request["taskarg_#{key}"] }
+						
+						list = Mrowka::Models::List.new(
+							type: type,
+							desc: @request[:desc],
+							args: args,
+							created: Time.now,
+							user: @request[:user],
+						)
+						list.save
+					end
+					
+					redirect Lists
+				end
+			end
 		end
 		
 		module Views
-			Tasks = Controllers::Tasks # yay constant resolution rules...
+			# yay constant resolution rules...
+			Tasks = Controllers::Tasks
+			Lists = Controllers::Lists
 
 			def layout
 				html do
@@ -95,6 +144,8 @@ module Mrowka
 				ul do
 					li { a "przejrzeć listę zaproponowanych, trwających i zakończonych prac", href: R(Tasks) }
 					li { a "zgłosić nową robótkę", href: R(New) }
+					li { a "przejrzeć spis zdefiniowanych list", href: R(Lists) }
+					li { a "utworzyć nową listę", href: R(ListsNew) }
 				end
 			end
 			
@@ -149,6 +200,82 @@ module Mrowka
 				end
 			end
 			
+			def lists
+				table border:1 do
+					tr do
+						th "Typ"
+						th "Opis"
+						th "Dane wejściowe"
+						th "Utworzona"
+						th "Wygenerowana"
+						th "Zawartość"
+					end
+					@lists.each do |list|
+						tr do
+							td list.type
+							td list.desc
+							td do
+								ul do
+									list.args.each do |val|
+										li val
+									end
+								end
+							end
+							td list.created
+							td list.updated 
+							td {
+								a "Zobacz lub wygeneruj zawartość", href: R(ListN, list.id)
+							}
+						end
+					end
+				end
+			end
+			
+			def list
+				dl do
+					dt "Typ"
+					dd @list.type
+					dt "Opis"
+					dd @list.desc
+					dt "Dane wejściowe"
+					dd do
+						ol do
+							@list.args.each do |val|
+								li val
+							end
+						end
+					end
+					dt "Utworzona"
+					dd @list.created
+					dt "Wygenerowana"
+					dd @list.updated 
+					dt "Zawartość"
+					dd do
+						if @list.contents
+							ol do
+								@list.contents.each do |item|
+									li item
+								end
+							end
+						end
+					end
+					dt "Akcje"
+					dd do
+						# TODO sucks
+						a "#{@list.contents ? "Wygeneruj ponownie zawartość" : "Wygeneruj zawartość"}", href: R(NewX, 'list') + "?from_list=#{@list.id}"
+					end
+				end
+			end
+			
+			def new_list_list
+				h2 "Nowa lista"
+				ul do
+					Mrowka::Lists.each_pair do |key, val|
+						li { a val[:desc], href:R(ListsNewX, key) }
+					end
+				end
+			end
+			
 			def _confirm_form task
 				_field = lambda{|k,v| input type:'hidden', name:k, value:v }
 				
@@ -186,13 +313,38 @@ module Mrowka
 				
 				form method:'POST' do
 					Mrowka::Tasks[@type.to_sym][:attrs].each_pair do |key, (mode, desc)|
+						# TODO sucks
+						if key.to_s == 'list_id'
+							send mode, desc, "taskarg_#{key}", @request['from_list']
+						else
+							send mode, desc, "taskarg_#{key}"
+						end
+						br
+					end
+					br; br
+					# TODO sucks badly
+					_input "Zgłaszający", :user
+					text " (#{Mrowka::Tasks[@type.to_sym][:edits] != false ? "będziesz musiał potwierdzić zgłoszenie na swojej podstronie użytkownika" : "opcjonalne"})"
+					br
+					_input "Dodatkowy opis zmian (zostanie zawarty w opisie edycji bota)", :desc if Mrowka::Tasks[@type.to_sym][:edits] != false
+					br
+					input type:'submit', value:"Do pracy!"
+				end
+			end
+			
+			def new_list_form
+				h2 "Nowa lista"
+				h3 @type
+				
+				form method:'POST' do
+					Mrowka::Lists[@type.to_sym][:attrs].each_pair do |key, (mode, desc)|
 						send mode, desc, "taskarg_#{key}"
 						br
 					end
 					br; br
-					_input "Zgłaszający", :user; text " (będziesz musiał potwierdzić zgłoszenie na swojej podstronie użytkownika)"
+					_input "Zgłaszający", :user; text " (opcjonalne)"
 					br
-					_input "Dodatkowy opis zmian (zostanie zawarty w opisie edycji bota)", :desc
+					_input "Opis listy (wymagany; będzie wyświetlony w spisie)", :desc
 					br
 					input type:'submit', value:"Do pracy!"
 				end

@@ -20,6 +20,23 @@ module Mrowka
 				interface.increment
 			},
 		},
+		# Generacja list.
+		list: {
+			edits: false,
+			attrs: {
+				list_id: [:_input, "Identifikator listy"],
+			},
+			process: lambda{|s, dummy_list, interface, (list_id)|
+				list = Mrowka::Models::List.find id: list_id.to_i
+				contents = s.make_list(list.type, *list.args)
+				
+				list.updated = Time.now
+				list.contents = contents.to_a
+				list.save
+				interface.increment
+			},
+		},
+		
 		# Przeniesienie / masowa zmiana kategorii.
 		category_move: {
 			attrs: {
