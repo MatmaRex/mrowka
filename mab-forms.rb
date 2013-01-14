@@ -28,9 +28,21 @@ module Mab::Mixin
 		end
 	end
 	
+	# options: {value => label}
+	def _select text, name, options, checked=0
+		label text, :for=>name
+		text ' '
+		select name:name, id:name do
+			options.each_pair do |val, text|
+				option text, value: val
+			end
+		end
+	end
+	
 	def _checkbox text, name, checked=false
 		label text, :for=>name
 		text ' '
 		input name:name, id:name, type:'checkbox', checked:(!!checked)
 	end
+	
 end
