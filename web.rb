@@ -40,13 +40,13 @@ module Mrowka
 				end
 			end
 			
-			class New
+			class TasksNew
 				def get
 					render :new_task_list
 				end
 			end
 			
-			class NewX
+			class TasksNewX
 				def get type
 					@type = type.to_sym
 					render :new_task_form
@@ -82,7 +82,7 @@ module Mrowka
 				end
 			end
 			
-			class ListN
+			class ListsN
 				def get n
 					@list = Mrowka::Models::List.find id: n.to_i
 					render :list
@@ -143,7 +143,7 @@ module Mrowka
 				p "Możesz:"
 				ul do
 					li { a "przejrzeć listę zaproponowanych, trwających i zakończonych prac", href: R(Tasks) }
-					li { a "zgłosić nową robótkę", href: R(New) }
+					li { a "zgłosić nową robótkę", href: R(TasksNew) }
 					li { a "przejrzeć spis zdefiniowanych list", href: R(Lists) }
 					li { a "utworzyć nową listę", href: R(ListsNew) }
 				end
@@ -224,7 +224,7 @@ module Mrowka
 							td list.created
 							td list.updated 
 							td {
-								a "Zobacz lub wygeneruj zawartość", href: R(ListN, list.id)
+								a "Zobacz lub wygeneruj zawartość", href: R(ListsN, list.id)
 							}
 						end
 					end
@@ -262,7 +262,7 @@ module Mrowka
 					dt "Akcje"
 					dd do
 						# TODO sucks
-						a "#{@list.contents ? "Wygeneruj ponownie zawartość" : "Wygeneruj zawartość"}", href: R(NewX, 'list') + "?from_list=#{@list.id}"
+						a "#{@list.contents ? "Wygeneruj ponownie zawartość" : "Wygeneruj zawartość"}", href: R(TasksNewX, 'list') + "?from_list=#{@list.id}"
 					end
 				end
 			end
@@ -302,7 +302,7 @@ module Mrowka
 				h2 "Nowe zadanie"
 				ul do
 					Mrowka::Tasks.each_pair do |key, val|
-						li { a readable_type_map[key], href:R(NewX, key) }
+						li { a readable_type_map[key], href:R(TasksNewX, key) }
 					end
 				end
 			end
