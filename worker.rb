@@ -68,7 +68,7 @@ module Mrowka
 				next if !task
 				
 				# if too many edits made in last 24 hours, stop.
-				if Mrowka::Models::Task.all.select{|task| !task.touched || Time.now-task.touched < 24*60*60 }.map{|task| task.status.change_done }.compact.inject(0, :+) >= MrowkaConfig['worker']['dailylimit'].to_i
+				if Mrowka::Models::Task.all.select{|task| !task.touched || Time.now-task.touched < 24*60*60 }.map{|task| task.status.change_done }.compact.inject(0, :+) >= Mrowka::Config['worker']['dailylimit'].to_i
 					puts "Daily limit exceeded. Sleeping for 30 minutes..."
 					sleep 60*30
 					next
