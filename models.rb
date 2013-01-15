@@ -45,6 +45,8 @@ module Mrowka
 		text :md5, unique: true
 		# List of articles to be edited. Stored serialized for convenience. TODO split.
 		binary :list
+		# ID of external list.
+		int :external_list_id
 	end
 
 	DB.create_table? :lists do
@@ -78,12 +80,15 @@ module Mrowka
 			plugin :serialization, :marshal, :list
 			
 			one_to_one :status
+			many_to_one :external_list, class: 'Mrowka::Models::List'
 		end
 
 		class List < Sequel::Model
 			plugin :schema
 			plugin :serialization, :marshal, :args
 			plugin :serialization, :marshal, :contents
+			
+			one_to_many :tasks
 		end
 	end
 end

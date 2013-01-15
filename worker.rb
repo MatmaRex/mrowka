@@ -103,6 +103,9 @@ module Mrowka
 					begin
 						if Mrowka::Tasks[task.type.to_sym][:make_list]
 							list = Mrowka::Tasks[task.type.to_sym][:make_list].call s, task.args
+						elsif Mrowka::Tasks[task.type.to_sym][:external_list] == true
+							# TODO force update?
+							list = Mrowka::Models::List.find(id: task.external_list_id).contents
 						else
 							list = []
 						end

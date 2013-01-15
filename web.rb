@@ -62,6 +62,7 @@ module Mrowka
 							started: Time.now,
 							touched: Time.now,
 							user: @request[:user],
+							external_list_id: @request[:list].to_i,
 							md5: nil # placeholder!
 						)
 						task.save # TODO dafuq? why is this necessary?
@@ -182,6 +183,12 @@ module Mrowka
 							td task.desc
 							td do
 								dl do
+									if Mrowka::Tasks[task.type.to_sym][:external_list]
+										dt "Lista"
+										dd do
+											a task.external_list.desc, href: R(ListsN, task.external_list.id)
+										end
+									end
 									Mrowka::Tasks[task.type.to_sym][:attrs].keys.zip(task.args) do |key, val|
 										dt key
 										dd val
@@ -312,6 +319,11 @@ module Mrowka
 				h3 @type
 				
 				form method:'POST' do
+					if Mrowka::Tasks[@type.to_sym][:external_list] == true
+						map = Hash[ Mrowka::Models::List.all.map{|l| [l.id, l.desc] } ]
+						_select "Lista", 'list', map
+					end
+					
 					Mrowka::Tasks[@type.to_sym][:attrs].each_pair do |key, (mode, desc)|
 						# TODO sucks
 						if key.to_s == 'list_id'
