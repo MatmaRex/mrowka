@@ -19,9 +19,9 @@ module Mrowka
 			end
 			
 			# Increments the progress.
-			def increment
+			def increment n=1
 				@prog ||= 0
-				@prog += 1
+				@prog += n
 				
 				@task.status.change_done = @prog
 				@task.status.save
