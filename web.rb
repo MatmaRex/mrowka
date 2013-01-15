@@ -183,13 +183,13 @@ module Mrowka
 							td task.desc
 							td do
 								dl do
-									if Mrowka::Tasks[task.type.to_sym][:external_list]
+									if task.definition[:external_list]
 										dt "Lista"
 										dd do
 											a task.external_list.desc, href: R(ListsN, task.external_list.id)
 										end
 									end
-									Mrowka::Tasks[task.type.to_sym][:attrs].keys.zip(task.args) do |key, val|
+									task.definition[:attrs].keys.zip(task.args) do |key, val|
 										dt key
 										dd val
 									end
@@ -200,7 +200,7 @@ module Mrowka
 							td {
 								text task.md5
 								text ' '
-								_confirm_form task if task.status.state == 'waiting' and Mrowka::Tasks[task.type.to_sym][:edits] != false
+								_confirm_form task if task.status.state == 'waiting' and task.definition[:edits] != false
 							}
 						end
 					end
@@ -315,16 +315,18 @@ module Mrowka
 			end
 			
 			def new_task_form
+				task_def = Mrowka::Tasks[@type.to_sym]
+				
 				h2 "Nowe zadanie"
 				h3 @type
 				
 				form method:'POST' do
-					if Mrowka::Tasks[@type.to_sym][:external_list] == true
+					if task_def[:external_list] == true
 						map = Hash[ Mrowka::Models::List.all.map{|l| [l.id, l.desc] } ]
 						_select "Lista", 'list', map
 					end
 					
-					Mrowka::Tasks[@type.to_sym][:attrs].each_pair do |key, (mode, desc)|
+					task_def[:attrs].each_pair do |key, (mode, desc)|
 						# TODO sucks
 						if key.to_s == 'list_id'
 							send mode, desc, "taskarg_#{key}", @request['from_list']
@@ -336,9 +338,9 @@ module Mrowka
 					br; br
 					# TODO sucks badly
 					_input "Zgłaszający", :user
-					text " (#{Mrowka::Tasks[@type.to_sym][:edits] != false ? "będziesz musiał potwierdzić zgłoszenie na swojej podstronie użytkownika" : "opcjonalne"})"
+					text " (#{task_def[:edits] != false ? "będziesz musiał potwierdzić zgłoszenie na swojej podstronie użytkownika" : "opcjonalne"})"
 					br
-					_input "Dodatkowy opis zmian (zostanie zawarty w opisie edycji bota)", :desc if Mrowka::Tasks[@type.to_sym][:edits] != false
+					_input "Dodatkowy opis zmian (zostanie zawarty w opisie edycji bota)", :desc if task_def[:edits] != false
 					br
 					input type:'submit', value:"Do pracy!"
 				end

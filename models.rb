@@ -81,6 +81,9 @@ module Mrowka
 			
 			one_to_one :status
 			many_to_one :external_list, class: 'Mrowka::Models::List'
+			
+			# Simplified access to the definition of a task of this type.
+			def definition; Mrowka::Tasks[self.type.to_sym]; end
 		end
 
 		class List < Sequel::Model
@@ -89,6 +92,9 @@ module Mrowka
 			plugin :serialization, :marshal, :contents
 			
 			one_to_many :tasks
+			
+			# Simplified access to the definition of a list of this type.
+			def definition; Mrowka::Lists[self.type.to_sym]; end
 		end
 	end
 end

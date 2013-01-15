@@ -78,7 +78,7 @@ module Mrowka
 				
 				case task.status.state
 				when 'waiting'
-					if Mrowka::Tasks[task.type.to_sym][:edits] == false
+					if task.definition[:edits] == false
 						okay = true
 					else
 						resp = s.API("action=query&list=users&format=json&usprop=groups&ususers=#{CGI.escape task.user}")
@@ -101,9 +101,9 @@ module Mrowka
 					
 				when 'queued'
 					begin
-						if Mrowka::Tasks[task.type.to_sym][:make_list]
-							list = Mrowka::Tasks[task.type.to_sym][:make_list].call s, task.args
-						elsif Mrowka::Tasks[task.type.to_sym][:external_list] == true
+						if task.definition[:make_list]
+							list = task.definition[:make_list].call s, task.args
+						elsif task.definition[:external_list] == true
 							# TODO force update?
 							list = Mrowka::Models::List.find(id: task.external_list_id).contents
 						else
@@ -126,7 +126,7 @@ module Mrowka
 					interface = Mrowka::Worker::Interface.new task
 					
 					begin
-						Mrowka::Tasks[task.type.to_sym][:process].call s, s.make_list(:pages, task.list), interface, task.args
+						task.definition[:process].call s, s.make_list(:pages, task.list), interface, task.args
 						okay = true
 					rescue => e
 						okay = false
