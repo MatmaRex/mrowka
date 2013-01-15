@@ -193,7 +193,7 @@ module Mrowka
 							td {
 								text task.md5
 								text ' '
-								_confirm_form task if task.status.state == 'waiting'
+								_confirm_form task if task.status.state == 'waiting' and Mrowka::Tasks[task.type.to_sym][:edits] != false
 							}
 						end
 					end
