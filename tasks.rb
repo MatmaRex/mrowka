@@ -89,5 +89,17 @@ module Mrowka
 				end
 			},
 		},
+		# Purge na stronach z listy.
+		purge: {
+			attrs: {},
+			external_list: true,
+			edits: false,
+			process: lambda{|s, list, interface, dummy|
+				list.to_a.each_slice(50) do |sublist|
+					s.API action: 'purge', forcelinkupdate: 1, titles: sublist.join("|")
+					interface.increment sublist.length
+				end
+			},
+		},
 	}
 end
