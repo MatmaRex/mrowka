@@ -4,6 +4,7 @@ module Mrowka
 	Tasks = {
 		# Zadanie testowe - zamiana zawartości strony.
 		test: {
+			desc: "Zadanie testowe",
 			attrs: {
 				title: [:_input, "Tytuł stony do testowania"],
 				text: [:_text, "Tekst do wstawienia"],
@@ -22,6 +23,7 @@ module Mrowka
 		},
 		# Generacja list.
 		list: {
+			desc: "Wygenerowanie listy",
 			edits: false,
 			attrs: {
 				list_id: [:_input, "Identifikator listy"],
@@ -39,6 +41,7 @@ module Mrowka
 		
 		# Przeniesienie / masowa zmiana kategorii.
 		category_move: {
+			desc: "Zmiana nazwy kategorii",
 			attrs: {
 				from: [:_input, "Nazwa kategorii, której zawartość chcesz przenieść (bez prefiksu Kategoria:)"],
 				to: [:_input, "Nazwa kategorii docelowej (bez prefiksu Kategoria:)"],
@@ -90,6 +93,7 @@ module Mrowka
 			},
 		},
 		category_delete: {
+			desc: "Opróżnienie kategorii",
 			attrs: {
 				cat: [:_input, "Nazwa kategorii, którą chcesz opróżnić (bez prefiksu Kategoria:)"],
 				fulldelete: [:_checkbox, "Oznacz samą kategorię {{ek}}"],
@@ -128,6 +132,7 @@ module Mrowka
 		},
 		
 		append: {
+			desc: "Dopisanie tekstu na końcu",
 			attrs: {
 				text: [:_text, "Tekst do wstawienia na końcu strony"],
 			},
@@ -143,6 +148,7 @@ module Mrowka
 			},
 		},
 		prepend: {
+			desc: "Dopisanie tekstu na początku",
 			attrs: {
 				text: [:_text, "Tekst do wstawienia na początku strony"],
 			},
@@ -160,6 +166,7 @@ module Mrowka
 		
 		# Purge na stronach z listy.
 		purge: {
+			desc: "Wykonanie akcji 'purge'",
 			attrs: {},
 			external_list: true,
 			edits: false,

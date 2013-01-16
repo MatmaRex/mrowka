@@ -150,14 +150,6 @@ module Mrowka
 			end
 			
 			def tasks
-				# TODO move to i18n file
-				readable_type_map = {
-					test: "Zadanie testowe",
-					append: "Dopisanie tekstu",
-					prepend: "Dopisanie tekstu na początku",
-					category_move: "Zmiana nazwy kategorii",
-					category_delete: "Opróżnienie kategorii",
-				}
 				readable_status_map = {
 					waiting: "Czekające na potwierdzenie",
 					queued: "W kolejce",
@@ -177,7 +169,7 @@ module Mrowka
 					end
 					@tasks.each do |task|
 						tr do
-							td readable_type_map[task.type.to_sym]
+							td task.definition[:desc]
 							td task.desc
 							td do
 								dl do
@@ -298,19 +290,10 @@ module Mrowka
 			end
 			
 			def new_task_list
-				# TODO move to i18n file
-				readable_type_map = {
-					test: "Zadanie testowe",
-					append: "Dopisanie tekstu",
-					prepend: "Dopisanie tekstu na początku",
-					category_move: "Zmiana nazwy kategorii",
-					category_delete: "Opróżnienie kategorii",
-				}
-				
 				h2 "Nowe zadanie"
 				ul do
 					Mrowka::Tasks.each_pair do |key, val|
-						li { a readable_type_map[key], href:R(TasksNewX, key) }
+						li { a val[:desc], href:R(TasksNewX, key) }
 					end
 				end
 			end
@@ -319,7 +302,7 @@ module Mrowka
 				task_def = Mrowka::Tasks[@type.to_sym]
 				
 				h2 "Nowe zadanie"
-				h3 @type
+				h3 task_def[:desc]
 				
 				form method:'POST' do
 					if task_def[:external_list] == true
@@ -348,11 +331,13 @@ module Mrowka
 			end
 			
 			def new_list_form
+				list_def = Mrowka::Lists[@type.to_sym]
+				
 				h2 "Nowa lista"
-				h3 @type
+				h3 list_def[:desc]
 				
 				form method:'POST' do
-					Mrowka::Lists[@type.to_sym][:attrs].each_pair do |key, (mode, desc)|
+					list_def[:attrs].each_pair do |key, (mode, desc)|
 						send mode, desc, "taskarg_#{key}"
 						br
 					end
