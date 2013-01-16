@@ -56,6 +56,7 @@ module Mrowka
 						
 						task = Mrowka::Models::Task.new(
 							type: type,
+							status: 'waiting',
 							desc: @request[:desc],
 							args: args,
 							started: Time.now,
@@ -64,9 +65,6 @@ module Mrowka
 							external_list_id: @request[:list].to_i,
 							md5: nil # placeholder!
 						)
-						task.save # TODO dafuq? why is this necessary?
-						
-						task.status = Mrowka::Models::Status.new(state: 'waiting')
 						task.md5 = Digest::MD5.hexdigest(task.inspect)
 						task.save
 					end
@@ -186,11 +184,11 @@ module Mrowka
 								end
 							end
 							td "#{task.started.to_s} przez #{task.user}"
-							td "#{readable_status_map[task.status.state.to_sym]} #{task.status.state == 'error' ? task.status.error_message : nil} (#{task.status.change_done}/#{task.status.change_total || '?'})"
+							td "#{readable_status_map[task.status.to_sym]} #{task.status == 'error' ? task.error_message : nil} (#{task.change_done}/#{task.change_total || '?'})"
 							td {
 								text task.md5
 								text ' '
-								_confirm_form task if task.status.state == 'waiting' and task.definition[:edits] != false
+								_confirm_form task if task.status == 'waiting' and task.definition[:edits] != false
 							}
 						end
 					end

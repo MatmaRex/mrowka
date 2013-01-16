@@ -8,12 +8,18 @@ require_relative 'config'
 module Mrowka
 	DB = Sequel.connect Mrowka::Config['database']['database']
 
-	DB.create_table? :statuses do
+	DB.create_table? :tasks do
 		primary_key :id
 		
-		# Current state of this task.
-		# enum :state, elements: %w[waiting queued inprogress error done], default: 'waiting'
-		text :state, default: 'waiting'
+		# Type of this task.
+		text :type
+		# Additional description added to edit summary. May be empty.
+		text :desc
+		# Arguments given by user. Stored serialized for convenience.
+		binary :args
+		
+		# Current status of this task.
+		text :status, default: 'waiting'
 		# How many edits are there to make. Null when unknown (list hasn't been made yet).
 		int :change_total, null: true
 		# How many edits already made. 
@@ -21,21 +27,6 @@ module Mrowka
 		# Error message, if any.
 		text :error_message, null: true
 		
-		int :task_id
-	end
-
-	DB.create_table? :tasks do
-		primary_key :id
-		
-		# Type of this task.
-		# enum :type, elements: %w[test append prepend category_move category_delete]
-		text :type
-		# Additional description added to edit summary. May be empty.
-		text :desc
-		# Arguments given by user. Stored serialized for convenience.
-		binary :args
-		# Current status of this task. TODO merge.
-		int :status_id
 		# Times this task has been created, and time it has been last touched.
 		datetime :started
 		datetime :touched
@@ -69,17 +60,11 @@ module Mrowka
 	end
 
 	module Models
-		# Represents current progress of a task.
-		class Status < Sequel::Model
-			one_to_one :task
-		end
-
 		class Task < Sequel::Model
 			plugin :schema
 			plugin :serialization, :marshal, :args
 			plugin :serialization, :marshal, :list
 			
-			one_to_one :status
 			many_to_one :external_list, class: 'Mrowka::Models::List'
 			
 			# Simplified access to the definition of a task of this type.

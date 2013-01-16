@@ -23,8 +23,8 @@ module Mrowka
 				@prog ||= 0
 				@prog += n
 				
-				@task.status.change_done = @prog
-				@task.status.save
+				@task.change_done = @prog
+				@task.save
 			end
 			
 			# Generates a full summary including the core part.
@@ -63,20 +63,20 @@ module Mrowka
 
 			while true
 				File.write 'keepalive', Time.now.to_i.to_s
-				task = Mrowka::Models::Task.all.find{|t| t.status.state != 'done' && t.status.state != 'error'} # TODO all?
+				task = Mrowka::Models::Task.all.find{|t| t.status != 'done' && t.status != 'error'} # TODO all?
 				sleep 5
 				next if !task
 				
 				# if too many edits made in last 24 hours, stop.
-				if Mrowka::Models::Task.all.select{|task| !task.touched || Time.now-task.touched < 24*60*60 }.map{|task| task.status.change_done }.compact.inject(0, :+) >= Mrowka::Config['worker']['dailylimit'].to_i
+				if Mrowka::Models::Task.all.select{|task| !task.touched || Time.now-task.touched < 24*60*60 }.map{|task| task.change_done }.compact.inject(0, :+) >= Mrowka::Config['worker']['dailylimit'].to_i
 					puts "Daily limit exceeded. Sleeping for 30 minutes..."
 					sleep 60*30
 					next
 				end
 				
-				print "Task #{task.md5}: #{task.status.state}... "
+				print "Task #{task.md5}: #{task.status}... "
 				
-				case task.status.state
+				case task.status
 				when 'waiting'
 					if task.definition[:edits] == false
 						okay = true
@@ -93,10 +93,10 @@ module Mrowka
 					end
 					
 					if okay
-						task.status.state = 'queued'
+						task.status = 'queued'
 					elsif !sysop
-						task.status.state = 'error'
-						task.status.error_message = "<user not a sysop>"
+						task.status = 'error'
+						task.error_message = "<user not a sysop>"
 					end
 					
 				when 'queued'
@@ -115,11 +115,11 @@ module Mrowka
 					
 					if list
 						task.list = list.to_a
-						task.status.change_total = list.length
-						task.status.state = 'inprogress'
+						task.change_total = list.length
+						task.status = 'inprogress'
 					else
-						task.status.state = 'error'
-						task.status.error_message = ([e.message]+e.backtrace).inspect
+						task.status = 'error'
+						task.error_message = ([e.message]+e.backtrace).inspect
 					end
 					
 				when 'inprogress'
@@ -134,10 +134,10 @@ module Mrowka
 					s.summary = nil
 					
 					if okay
-						task.status.state = 'done'
+						task.status = 'done'
 					else
-						task.status.state = 'error'
-						task.status.error_message = ([e.message]+e.backtrace).inspect
+						task.status = 'error'
+						task.error_message = ([e.message]+e.backtrace).inspect
 					end
 					
 				when 'done', 'error'
@@ -151,8 +151,7 @@ module Mrowka
 				task.touched = Time.now
 				
 				task.save
-				task.status.save
-				print "-> #{task.status.state}\n"
+				print "-> #{task.status}\n"
 			end
 		end
 	end
