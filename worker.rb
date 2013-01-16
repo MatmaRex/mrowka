@@ -94,7 +94,7 @@ module Mrowka
 					
 					if okay
 						task.status.state = 'queued'
-					else
+					elsif !sysop
 						task.status.state = 'error'
 						task.status.error_message = "<user not a sysop>"
 					end
