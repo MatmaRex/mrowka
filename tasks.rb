@@ -89,6 +89,75 @@ module Mrowka
 				end
 			},
 		},
+		category_delete: {
+			attrs: {
+				cat: [:_input, "Nazwa kategorii, którą chcesz opróżnić (bez prefiksu Kategoria:)"],
+				fulldelete: [:_checkbox, "Oznacz samą kategorię {{ek}}"],
+			},
+			make_list: lambda{|s, (cat, fulldelete)|
+				cat = s.cleanup_title cat
+				cat = 'Category:'+cat unless cat.index(s.ns_regex_for 'category') == 0
+				
+				s.make_list :category, cat
+			},
+			process: lambda{|s, list, interface, (cat, fulldelete)|
+				# data comes straight from the form...
+				fulldelete = (fulldelete=='on')
+				
+				cat = s.cleanup_title cat
+				cat.sub!(/^#{s.ns_regex_for 'category'}:/, '')
+				
+				summ_intro = fulldelete ? "usuwa kategorię" : "opróżnia kategorię"
+				s.summary = interface.summary(
+					"#{summ_intro}: [[:Category:#{cat}|#{cat}]]",
+					"#{summ_intro}: #{cat}",
+				)
+				
+				if fulldelete
+					f = s.page 'Category:'+cat
+					f.prepend "{{ek|#{s.summary}}}"
+					f.save
+				end
+				
+				list.pages_preloaded.each do |p|
+					p.remove_category cat
+					p.save
+					interface.increment
+				end
+			},
+		},
+		
+		append: {
+			attrs: {
+				text: [:_text, "Tekst do wstawienia na końcu strony"],
+			},
+			external_list: true,
+			process: lambda{|s, list, interface, (text)|
+				s.summary = interface.summary "dodaje stopkę"
+				
+				list.pages_preloaded.each do |p|
+					p.append text
+					p.save
+					interface.increment
+				end
+			},
+		},
+		prepend: {
+			attrs: {
+				text: [:_text, "Tekst do wstawienia na początku strony"],
+			},
+			external_list: true,
+			process: lambda{|s, list, interface, (text)|
+				s.summary = interface.summary "dodaje nagłówek"
+				
+				list.pages_preloaded.each do |p|
+					p.prepend text
+					p.save
+					interface.increment
+				end
+			},
+		},
+		
 		# Purge na stronach z listy.
 		purge: {
 			attrs: {},
