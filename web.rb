@@ -176,7 +176,6 @@ module Mrowka
 						th "Hash"
 					end
 					@tasks.each do |task|
-						puts task.inspect
 						tr do
 							td readable_type_map[task.type.to_sym]
 							td task.desc
