@@ -1,10 +1,9 @@
 # coding: utf-8
 
 require 'camping'
-# TODO fix Sunflower so this is not necessary
-class Sunflower; end
-require 'sunflower/list'
+require 'sunflower'
 
+require_relative 'config'
 require_relative 'tasks'
 require_relative 'lists'
 require_relative 'models'
@@ -286,8 +285,11 @@ module Mrowka
 			def _confirm_form task
 				_field = lambda{|k,v| input type:'hidden', name:k, value:v }
 				
-				form style:'display:inline', method:"POST", action:"https://pl.wikipedia.org/w/index.php" do
-					_field.call 'title', "Wikipedysta:#{task.user}/mrówka.js"
+				# TODO this is unacceptable
+				index_php = Sunflower.new(Mrowka::Config['worker']['botwiki']).api_endpoint.sub(/api\.php$/, 'index.php').sub(/^http:/, 'https:')
+				
+				form style: 'display:inline', method: "POST", action: index_php do
+					_field.call 'title', "User:#{task.user}/mrówka.js"
 					_field.call 'action', 'edit'
 					_field.call 'wpSummary', "potwierdzenie zgłoszenia #{task.md5}"
 					_field.call 'wpTextbox1', task.md5.to_s
