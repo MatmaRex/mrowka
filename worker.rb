@@ -78,6 +78,7 @@ module Mrowka
 				
 				case task.status
 				when 'waiting'
+					okay = false
 					if task.definition[:edits] == false
 						okay = true
 					else
