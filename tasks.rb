@@ -131,6 +131,30 @@ module Mrowka
 			},
 		},
 		
+		text_replace: {
+			desc: "Zamiana tekstu",
+			attrs: {
+				from: [:_input, "Znajdź"],
+				to: [:_input, "Zamień na"],
+				regex: [:_checkbox, "Wyrażenia regularne"],
+			},
+			external_list: true,
+			process: lambda{|s, list, interface, (from, to, regex)|
+				s.summary = interface.summary "zamienia tekst"
+				
+				list.pages_preloaded.each do |p|
+					if regex == 'on'
+						p.text.gsub! /#{from}/, to
+					else
+						p.text.gsub! from, to
+					end
+					
+					p.save
+					interface.increment
+				end
+			},
+		},
+		
 		append: {
 			desc: "Dopisanie tekstu na końcu",
 			attrs: {
