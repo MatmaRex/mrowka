@@ -85,10 +85,9 @@ module Mrowka
 					if task.definition[:edits] == false
 						valid = confirmed = true
 					else
-						resp = s.API("action=query&list=users&format=json&usprop=groups&ususers=#{CGI.escape task.user}")
-						sysop = ( ( resp['query']['users'].first || {} )['groups'] || [] ).include? 'sysop'
+						whitelist = File.readlines('whitelist.txt').map(&:strip)
 						
-						if sysop
+						if whitelist.include? task.user
 							valid = true
 							
 							page = s.page "User:#{task.user}/mrówka.js"
@@ -110,11 +109,11 @@ module Mrowka
 						# pass
 					elsif !valid && !confirmed
 						task.status = 'error'
-						task.error_message = "<user not a sysop>"
+						task.error_message = "<user not allowed to perform this task>"
 					elsif !valid && confirmed
 						raise "shouldn't happen"
 					end
-					
+				
 				when 'queued'
 					begin
 						if task.definition[:make_list]
