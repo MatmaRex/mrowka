@@ -103,7 +103,7 @@ module Mrowka
 					
 					if valid.nil? || confirmed.nil?
 						raise "shouldn't happen"
-					if valid && confirmed
+					elsif valid && confirmed
 						task.status = 'queued'
 					elsif valid && !confirmed
 						# pass
