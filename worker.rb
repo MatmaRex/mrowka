@@ -78,26 +78,41 @@ module Mrowka
 				
 				case task.status
 				when 'waiting'
-					okay = false
+					# valid - user is allowed to do this, don't cancel this task
+					# confirmed - user confirmed he does in fact want to perform this task, do it
+					valid = confirmed = nil
+					
 					if task.definition[:edits] == false
-						okay = true
+						valid = confirmed = true
 					else
 						resp = s.API("action=query&list=users&format=json&usprop=groups&ususers=#{CGI.escape task.user}")
 						sysop = ( ( resp['query']['users'].first || {} )['groups'] || [] ).include? 'sysop'
 						
 						if sysop
+							valid = true
+							
 							page = s.page "User:#{task.user}/mrówka.js"
 							if page.text.strip == task.md5.to_s
-								okay = true
+								confirmed = true
+							else
+								confirmed = false
 							end
+						else
+							valid = confirmed = false
 						end
 					end
 					
-					if okay
+					if valid.nil? || confirmed.nil?
+						raise "shouldn't happen"
+					if valid && confirmed
 						task.status = 'queued'
-					elsif !sysop
+					elsif valid && !confirmed
+						# pass
+					elsif !valid && !confirmed
 						task.status = 'error'
 						task.error_message = "<user not a sysop>"
+					elsif !valid && confirmed
+						raise "shouldn't happen"
 					end
 					
 				when 'queued'
