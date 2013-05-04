@@ -306,6 +306,9 @@ module Mrowka
 					if task_def[:external_list] == true
 						map = Hash[ Mrowka::Models::List.all.map{|l| [l.id, l.desc] } ]
 						_select "Lista", 'list', map
+						text ' '
+						a '(utwórz nową)', href: R(ListsNew)
+						br
 					end
 					
 					task_def[:attrs].each_pair do |key, (mode, desc)|
