@@ -14,7 +14,7 @@
  * @license CC-BY 3.0 <http://creativecommons.org/licenses/by/3.0>
  * @license GPL2 <http://www.gnu.org/licenses/old-licenses/gpl-2.0.html>
  */
-( function ( $, mw ) {
+( function ( $ ) {
 	var lpx = 'jquery.makeCollapsible> ';
 
 	/**
@@ -245,8 +245,8 @@
 			}
 
 			// Use custom text or default?
-			collapseText = options.collapseText || $collapsible.attr( 'data-collapsetext' ) || mw.msg( 'collapsible-collapse' );
-			expandText = options.expandText || $collapsible.attr( 'data-expandtext' ) || mw.msg( 'collapsible-expand' );
+			collapseText = options.collapseText || $collapsible.attr( 'data-collapsetext' ) || 'collapse';
+			expandText = options.expandText || $collapsible.attr( 'data-expandtext' ) || 'expand';
 
 			// Default click/keypress handler and toggle link to use when none is present
 			actionHandler = function ( e, opts ) {
@@ -282,12 +282,10 @@
 			} else {
 				collapsibleId = $collapsible.attr( 'id' ) || '';
 				if ( collapsibleId.indexOf( 'mw-customcollapsible-' ) === 0 ) {
-					mw.log( lpx + 'Found custom collapsible: #' + collapsibleId );
 					$customTogglers = $( '.' + collapsibleId.replace( 'mw-customcollapsible', 'mw-customtoggle' ) );
 
 					// Double check that there is actually a customtoggle link
 					if ( !$customTogglers.length ) {
-						mw.log( lpx + '#' + collapsibleId + ': Missing toggler!' );
 					}
 				}
 			}
@@ -375,4 +373,4 @@
 			}
 		} );
 	};
-}( jQuery, mediaWiki ) );
+}( jQuery ) );
