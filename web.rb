@@ -211,7 +211,7 @@ module Mrowka
 				end
 				text! '<script src="/resources/jquery.js"></script>'
 				text! '<script src="/resources/jquery.makeCollapsible.js"></script>'
-				script "$('.tasklist td .error').makeCollapsible()"
+				script "$('.tasklist td .error').makeCollapsible({collapsed: true})"
 			end
 			
 			def lists
