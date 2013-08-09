@@ -196,8 +196,15 @@ module Mrowka
 			edits: false,
 			process: lambda{|s, list, interface, dummy|
 				list.to_a.each_slice(50) do |sublist|
-					s.API action: 'purge', forcelinkupdate: 1, titles: sublist.join("|")
-					interface.increment sublist.length
+					begin
+						s.API action: 'purge', forcelinkupdate: 1, titles: sublist.join("|")
+						interface.increment sublist.length
+					rescue RestClient::Exception
+						sublist.each do |t|
+							s.API action: 'purge', forcelinkupdate: 1, titles: t
+							interface.increment 1
+						end
+					end
 				end
 			},
 		},
