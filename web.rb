@@ -9,6 +9,12 @@ require_relative 'lists'
 require_relative 'models'
 require_relative 'mab-forms'
 
+class Object
+	def blank?
+		!self || (self.respond_to? :empty and self.empty?) || (self.respond_to? :zero and self.zero?)
+	end
+end
+
 # monkey-patch
 module Camping
 	class << self
@@ -45,7 +51,16 @@ module Mrowka
 			
 			class Tasks
 				def get
+					@limit = @request[:limit].blank? ? 25 : @request[:limit].to_i
+					@offset = @request[:offset].blank? ? nil : @request[:offset].to_i
+					
+					# TODO don't select all
 					@tasks = Mrowka::Models::Task.all
+					@total = @tasks.length
+					
+					@offset = ((@total-1) / @limit) * @limit if !@offset
+					@tasks = @tasks[@offset, @limit]
+					
 					render :tasks
 				end
 			end
@@ -167,6 +182,8 @@ module Mrowka
 					done: "Wykonane",
 				}
 				
+				_tasks_pagination @offset, @limit, @total
+				
 				table.tasklist border:1 do
 					tr do
 						th "Typ"
@@ -209,9 +226,25 @@ module Mrowka
 						end
 					end
 				end
+				
+				_tasks_pagination @offset, @limit, @total
+				
 				text! '<script src="/resources/jquery.js"></script>'
 				text! '<script src="/resources/jquery.makeCollapsible.js"></script>'
 				script "$('.tasklist td .error').makeCollapsible({collapsed: true})"
+			end
+			
+			def _tasks_pagination offset, limit, total
+				(0...total).step(limit).each_with_index do |off, page_no|
+					if off == offset
+						b page_no+1
+					else
+						a page_no+1, href: R(Tasks, limit: limit, offset: off)
+					end
+					text ' '
+				end
+				
+				a 'wszystkie', href: R(Tasks, limit: total, offset: 0) unless offset==0 and limit==total
 			end
 			
 			def lists
