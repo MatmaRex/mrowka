@@ -32,6 +32,17 @@ module Mrowka
 				end
 			end
 			
+			class ResourcesX
+				def get file
+					okay = %w[jquery.js jquery.makeCollapsible.js]
+					if okay.include? file
+						File.read "./resources/#{file}"
+					else
+						""
+					end
+				end
+			end
+			
 			class Tasks
 				def get
 					@tasks = Mrowka::Models::Task.all
@@ -156,7 +167,7 @@ module Mrowka
 					done: "Wykonane",
 				}
 				
-				table border:1 do
+				table.tasklist border:1 do
 					tr do
 						th "Typ"
 						th "Opis"
@@ -184,7 +195,12 @@ module Mrowka
 								end
 							end
 							td "#{task.started.to_s} przez #{task.user}"
-							td "#{readable_status_map[task.status.to_sym]} #{task.status == 'error' ? task.error_message : nil} (#{task.change_done}/#{task.change_total || '?'})"
+							td {
+								span.info "#{readable_status_map[task.status.to_sym]} (#{task.change_done}/#{task.change_total || '?'})"
+								if task.status == 'error'
+									span.error task.error_message
+								end
+							}
 							td {
 								text task.md5
 								text ' '
@@ -193,6 +209,9 @@ module Mrowka
 						end
 					end
 				end
+				text! '<script src="/resources/jquery.js"></script>'
+				text! '<script src="/resources/jquery.makeCollapsible.js"></script>'
+				script "$('.tasklist td .error').makeCollapsible()"
 			end
 			
 			def lists
