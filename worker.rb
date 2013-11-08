@@ -106,7 +106,12 @@ module Mrowka
 					elsif valid && confirmed
 						task.status = 'queued'
 					elsif valid && !confirmed
-						# pass
+						if task.started < Time.now - 60*60
+							task.status = 'error'
+							task.error_message = "<expired (not confirmed for 60m)>"
+						else
+							# pass
+						end
 					elsif !valid && !confirmed
 						task.status = 'error'
 						task.error_message = "<user not allowed to perform this task>"
